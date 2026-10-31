@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>本站 · 游戏工具与沙盘记录</title>
+<meta name="description" content="纯前端的游戏小工具集合：沙盘记录、决策建议、规则速查。无需登录，数据全在本地。">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🗝️</text></svg>">
+<link rel="stylesheet" href="assets/css/base.css">
+</head>
+<body>
+<a class="skip" href="#main">跳到主要内容</a>
+
+<header class="site-header">
+  <a class="brand" href="./index.html">
+    <svg class="logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-9h6v9"/></svg>
+    本站
+  </a>
+  <nav aria-label="站内导航">
+    <a href="./index.html" aria-current="page">工具</a>
+    <a href="tools/talos.html">沙盘指挥台</a>
+    <a href="#about">关于</a>
+  </nav>
+  <button class="btn-icon" id="btn-theme" type="button" title="切换主题">◐<span class="sr-only">切换主题</span></button>
+</header>
+
+<main id="main" class="wrap">
+
+  <section style="padding:2rem 0 1rem" class="prose">
+    <h1>游戏小工具</h1>
+    <p class="muted">纯前端、无登录、数据只存你自己的浏览器。开箱即用，加载快，离线也能开。</p>
+  </section>
+
+  <ul class="tool-grid">
+    <li>
+      <a class="tool-card" href="tools/talos.html">
+        <span class="ico" aria-hidden="true">🗝️</span>
+        <h3>沙盘同步指挥台 · 塔罗斯监狱</h3>
+        <p>录入 16 间牢房的囚犯与候选房，按「同阶 + 克制」与刑具破例给出下一步动作：吃 / 换 / 开房 / 去审讯室。</p>
+        <span class="tags">
+          <span class="badge">沙盘记录</span>
+          <span class="badge">决策建议</span>
+          <span class="badge">可导出</span>
+        </span>
+      </a>
+    </li>
+    <li>
+      <span class="tool-card is-soon" aria-disabled="true">
+        <span class="ico" aria-hidden="true">📋</span>
+        <h3>规则速查表</h3>
+        <p>把阶位、食物链、刑具破例、事件收益做成可筛选的一页表。（规划中）</p>
+        <span class="tags"><span class="badge">规划中</span></span>
+      </span>
+    </li>
+    <li>
+      <span class="tool-card is-soon" aria-disabled="true">
+        <span class="ico" aria-hidden="true">🎲</span>
+        <h3>开吃日计算器</h3>
+        <p>只选你手上的刑具，直接算这一局该第几天开始吃。（规划中）</p>
+        <span class="tags"><span class="badge">规划中</span></span>
+      </span>
+    </li>
+  </ul>
+
+  <section id="about" class="prose" style="margin-top:3rem">
+    <h2>关于本站</h2>
+    <p>这是一个由玩家自建的非官方工具站。所有工具都在浏览器本地运算，不会上传你的数据，也不需要注册。</p>
+    <p>数值与规则参考官方前瞻信息与玩家实测整理，可能随游戏版本变化，请以游戏内实际为准。本站不提供任何虚拟物品交易、代练或第三方修改服务。</p>
+
+    <h2 id="privacy">隐私</h2>
+    <p>我们不收集、不上传任何个人数据。工具的进度保存在你浏览器的 <code>localStorage</code> 里，清空浏览器数据即会丢失；你可以随时用工具页的「导出 JSON」备份。</p>
+    <p>本站不含第三方统计与广告脚本。</p>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p class="disclaimer">非官方玩家自建站点。数值以游戏内实际为准。</p>
+    <nav aria-label="页脚导航">
+      <a href="./index.html">首页</a>
+      <a href="tools/talos.html">沙盘指挥台</a>
+      <a href="#about">关于</a>
+      <a href="#privacy">隐私</a>
+    </nav>
+  </div>
+</footer>
+
+<script type="module">
+  import * as store from "./assets/js/store.js?v=1";
+  store.applyTheme(store.currentTheme());
+  document.getElementById("btn-theme").addEventListener("click", () => store.cycleTheme());
+</script>
+</body>
+</html>
