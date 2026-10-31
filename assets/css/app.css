@@ -254,6 +254,156 @@ input[type="number"].num { width: 92px; text-align: center; }
 .pw-item:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 .pw-item .mono { word-break: break-all; }
 
+/* ============================================================
+   仪表盘
+   ============================================================ */
+
+/* 外层网格：桌面 2 栏，时钟/便签/链接跨满整行；窄屏退化为单列堆叠 */
+.dash {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 720px) {
+  .dash { grid-template-columns: 1fr 1fr; }
+  .dash-clock, .dash-note, .dash-links { grid-column: 1 / -1; }
+}
+.dash-cell { min-width: 0; }
+
+/* ---------- 卡片 ---------- */
+.card {
+  display: flex; flex-direction: column;
+  height: 100%;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--raise);
+  overflow: hidden;
+}
+.card-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--sunken);
+}
+.card-title {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 10.5px; font-weight: 600;
+  letter-spacing: .13em; text-transform: uppercase;
+  color: var(--faint);
+}
+.card-badge {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 10.5px; color: var(--faint); white-space: nowrap;
+}
+.card-badge.is-err { color: var(--err); }
+.card-body { flex: 1; min-width: 0; padding: 14px; }
+
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 2px 7px;
+  border: 1px solid var(--line-strong); border-radius: 4px;
+  background: var(--raise); color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 10.5px; cursor: pointer;
+  transition: border-color .14s ease, color .14s ease, background-color .14s ease;
+}
+.icon-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
+/* ---------- 时钟 ---------- */
+.clock { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 18px 14px; }
+.clock-time {
+  font-size: clamp(30px, 6.5vw, 46px); font-weight: 600; line-height: 1.1;
+  letter-spacing: .04em; color: var(--fg); font-variant-numeric: tabular-nums;
+}
+.clock-row {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px;
+  margin-top: 2px; font-size: 12.5px; color: var(--muted);
+}
+.clock-week { color: var(--accent); }
+.clock-greeting { margin-top: 4px; font-size: 12.5px; color: var(--faint); }
+
+/* ---------- 待办 ---------- */
+.todo-list { display: grid; gap: 6px; margin: 12px 0 0; padding: 0; list-style: none; }
+.todo-empty { padding: 18px 0; text-align: center; font-size: 12px; color: var(--faint); }
+.todo-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--line); border-radius: 4px;
+  background: var(--sunken);
+  transition: border-color .14s ease, opacity .14s ease;
+}
+.todo-item:hover { border-color: var(--line-strong); }
+.todo-label { display: flex; flex: 1; align-items: center; gap: 8px; min-width: 0; cursor: pointer; }
+.todo-check { flex: none; width: 14px; height: 14px; accent-color: var(--accent); cursor: pointer; }
+.todo-text {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 13px; color: var(--fg);
+}
+.todo-item.is-done { opacity: .5; }
+.todo-item.is-done .todo-text { text-decoration: line-through; }
+.todo-del { flex: none; width: 22px; padding: 2px 0; opacity: 0; }
+.todo-item:hover .todo-del, .todo-del:focus-visible { opacity: 1; }
+
+/* ---------- 便签 ---------- */
+.note-area { width: 100%; min-height: 150px; resize: vertical; font-size: 13px; line-height: 1.7; }
+.note-count { display: block; margin-top: 6px; text-align: right; font-size: 10.5px; color: var(--faint); }
+
+/* ---------- 倒计时 ---------- */
+.cd-view { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0; }
+.cd-view.hide { display: none; }
+.cd-name { font-size: 13px; color: var(--muted); }
+.cd-main { display: flex; align-items: baseline; gap: 6px; margin: 3px 0; }
+.cd-num {
+  font-size: clamp(30px, 7vw, 44px); font-weight: 600; line-height: 1;
+  color: var(--accent); font-variant-numeric: tabular-nums;
+}
+.cd-unit { font-size: 12.5px; color: var(--muted); }
+.cd-date { font-size: 11.5px; color: var(--faint); }
+.cd-hint { margin-top: 2px; font-size: 11.5px; color: var(--muted); }
+.card[data-state="today"] .cd-num { color: var(--ok); }
+.card[data-state="past"]  .cd-num { color: var(--faint); }
+
+.cd-form { display: none; flex-direction: column; gap: 8px; }
+.cd-form.show { display: flex; }
+
+/* ---------- 快捷链接 ---------- */
+.link-grid { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); }
+.link-card {
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+  padding: 13px 8px;
+  border: 1px solid var(--line); border-radius: 5px;
+  background: var(--sunken); color: var(--fg); text-decoration: none;
+  transition: border-color .14s ease, background-color .14s ease, transform .14s ease;
+}
+.link-card:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateY(-1px); }
+.link-icon {
+  display: grid; place-items: center;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--bg); color: var(--accent); font-size: 16px; line-height: 1;
+}
+.link-name {
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 12px; color: var(--muted);
+}
+
+/* ---------- 导航分区标题 ---------- */
+.nav-section {
+  padding: 12px 10px 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 9.5px; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--faint); white-space: nowrap;
+}
+.nav-section-gap { margin-top: 6px; border-top: 1px solid var(--line); }
+/* 显示/隐藏由 router.js 里的 Tailwind 类 hidden md:block 控制，
+   这里不再写媒体查询，避免两套断点互相打架 */
+
+/* 通用小工具类 */
+.hide { display: none !important; }
+.field-inline { display: flex; gap: 8px; min-width: 0; }
+.field-inline > * { flex: 1; min-width: 0; }
+
 /* ---------------- Toast ---------------- */
 #toast.show { opacity: 1; transform: translate(-50%, 0); }
 

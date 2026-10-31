@@ -16,22 +16,28 @@ function Step($n, $title, [scriptblock]$run) {
   }
 }
 
-Step "1/7" "语法与模块自检" { node tools/check.mjs }
-Step "2/7" "页面与资源自检" { node tools/site-check.mjs }
-Step "3/7" "工具逻辑验证" { node tools/logic-verify.mjs }
-Step "4/7" "路由联动测试" { node tools/router-test.mjs assets/js/core/router.js }
-Step "5/7" "二维码编解码验证" {
+Step "1/8" "语法与模块自检" { node tools/check.mjs }
+Step "2/8" "页面与资源自检" { node tools/site-check.mjs }
+Step "3/8" "工具逻辑验证" { node tools/logic-verify.mjs }
+Step "4/8" "路由联动测试" { node tools/router-test.mjs assets/js/core/router.js }
+Step "5/8" "界面冒烟测试（六个模块）" {
+  foreach ($t in @('dashboard', 'timestamp', 'base64', 'json', 'qrcode', 'password')) {
+    node tools/ui-smoke.mjs "assets/js/tools/$t.js"
+    if ($LASTEXITCODE -ne 0) { break }
+  }
+}
+Step "6/8" "二维码编解码验证" {
   node tools/qr-verify.mjs
   if ($LASTEXITCODE -eq 0) { node tools/qr-rs-check.mjs }
   if ($LASTEXITCODE -eq 0) { node tools/qr-robust.mjs }
 }
 
-Write-Host "`n[6/7] 提交" -ForegroundColor Cyan
+Write-Host "`n[7/8] 提交" -ForegroundColor Cyan
 git add -A
 git commit -m $Message
 if ($LASTEXITCODE -ne 0) { Write-Host "没有改动可提交（或提交失败），继续推送。" -ForegroundColor Yellow }
 
-Write-Host "`n[7/7] 推送" -ForegroundColor Cyan
+Write-Host "`n[8/8] 推送" -ForegroundColor Cyan
 git push
 if ($LASTEXITCODE -ne 0) { Write-Host "推送失败，看上面对话。" -ForegroundColor Red; exit 1 }
 

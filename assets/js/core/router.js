@@ -1,35 +1,58 @@
-/* 路由：基于 hash，无刷新切换 */
-import { TOOLS, TOOL_MAP, DEFAULT_ID } from './registry.js';
+/* 路由：基于 hash，无刷新切换
+ *
+ * 导航按「分区」分组渲染：
+ *   桌面端 = 左侧栏里的小标题 + 竖排条目
+ *   移动端 = 横向滚动的标签条（分区标题会隐藏，靠条目的图标区分）
+ */
+import { SECTIONS, TOOL_MAP, DEFAULT_ID } from './registry.js';
 import { el, $ } from './dom.js';
 
 let currentId = null;
-let cleanup = null;      // 上一个工具返回的清理函数
+let cleanup = null;      // 上一个条目返回的清理函数
 let onNavigate = null;
-let tabs = [];           // 导航标签引用，避免每次切换都查一遍全局 DOM
+let tabs = [];           // 导航条目引用，避免每次切换都查一遍全局 DOM
 
 function renderNav() {
   const list = $('#nav-list');
   if (!list) return;
-  tabs = TOOLS.map(t => {
-    const a = el('a', {
-      class: 'tab',
-      href: `#/${t.id}`,
-      role: 'tab',
-      id: `tab-${t.id}`,
-      'aria-selected': 'false',
-      'aria-controls': 'view',
-      dataset: { id: t.id },
-      on: {
-        click: e => { e.preventDefault(); location.hash = `#/${t.id}`; },
+
+  tabs = [];
+  const nodes = [];
+
+  SECTIONS.forEach((section, si) => {
+    // 分区标题：移动端顶部横滑时不占位（hidden），桌面端才显示（md:block）
+    const label = el('div', {
+      class: si > 0
+        ? 'nav-section nav-section-gap hidden md:block'
+        : 'nav-section hidden md:block',
+      text: section.label,
+      'aria-hidden': 'true',
+    });
+    nodes.push(label);
+
+    for (const item of section.items) {
+      const a = el('a', {
+        class: 'tab',
+        href: `#/${item.id}`,
+        role: 'tab',
+        id: `tab-${item.id}`,
+        'aria-selected': 'false',
+        'aria-controls': 'view',
+        dataset: { id: item.id, section: section.id },
+        on: {
+          click: e => { e.preventDefault(); location.hash = `#/${item.id}`; },
+        },
       },
-    },
-      el('span', { class: 'tab-ico', text: t.icon, 'aria-hidden': 'true' }),
-      el('span', { text: t.name }),
-    );
-    a.tabIndex = -1;
-    return a;
+        el('span', { class: 'tab-ico', text: item.icon, 'aria-hidden': 'true' }),
+        el('span', { class: 'tab-text', text: item.name }),
+      );
+      a.tabIndex = -1;
+      tabs.push(a);
+      nodes.push(a);
+    }
   });
-  list.replaceChildren(...tabs);
+
+  list.replaceChildren(...nodes);
 }
 
 function parseHash() {
@@ -41,7 +64,7 @@ function render(id) {
   const tool = TOOL_MAP.get(id);
   if (!tool) return;
 
-  // 清理上一个工具（解绑监听、停定时器）
+  // 清理上一个条目（解绑监听、停定时器）
   if (typeof cleanup === 'function') {
     try { cleanup(); } catch { /* ignore */ }
   }

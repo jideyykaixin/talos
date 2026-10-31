@@ -32,6 +32,11 @@ jobs:
         run: node tools/logic-verify.mjs
       - name: 路由联动测试
         run: node tools/router-test.mjs assets/js/core/router.js
+      - name: 界面冒烟测试（六个模块）
+        run: |
+          for t in dashboard timestamp base64 json qrcode password; do
+            node tools/ui-smoke.mjs "assets/js/tools/$t.js" || exit 1
+          done
       - name: 二维码编解码验证
         run: node tools/qr-verify.mjs && node tools/qr-rs-check.mjs && node tools/qr-robust.mjs
 

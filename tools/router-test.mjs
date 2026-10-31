@@ -67,6 +67,12 @@ function mkTool(id, name) {
 const TOOLS = [mkTool('a', '工具A'), mkTool('b', '工具B'), mkTool('c', '工具C')];
 const TOOL_MAP = new Map(TOOLS.map(t => [t.id, t]));
 const DEFAULT_ID = 'a';
+// 新注册表是分区结构：面板(panel) 放 a，工具箱(toolbox) 放 b、c
+const SECTIONS = [
+  { id: 'panel', label: '面板', items: [TOOLS[0]] },
+  { id: 'toolbox', label: '工具箱', items: [TOOLS[1], TOOLS[2]] },
+];
+const SECTION_OF = new Map(SECTIONS.flatMap(s => s.items.map(t => [t.id, s.id])));
 
 const domShim = `
 const el = (tag, attrs = {}, ...children) => {
@@ -103,7 +109,7 @@ const sb = {
     addEventListener(t, f) { if (t === 'hashchange') hashListeners.push(f); },
     removeEventListener(t, f) { const i = hashListeners.indexOf(f); if (i >= 0) hashListeners.splice(i, 1); },
   },
-  TOOLS, TOOL_MAP, DEFAULT_ID,
+  TOOLS, TOOL_MAP, DEFAULT_ID, SECTIONS, SECTION_OF,
   docTitle: '',
 };
 sb.globalThis = sb;
@@ -132,6 +138,16 @@ try {
 
 const tabs = () => navList.querySelectorAll('.tab');
 ok('导航渲染出全部工具', tabs().length === TOOLS.length, `${tabs().length} 个标签`);
+
+// 分区导航：两个分区标题 + 第二个分区带 nav-section-gap
+const sections = navList.querySelectorAll('.nav-section');
+ok('渲染出分区标题', sections.length === SECTIONS.length, `${sections.length} 个分区`);
+ok('分区标题文案正确', sections.map(s => s.textContent).join('|') === SECTIONS.map(s => s.label).join('|'),
+   sections.map(s => s.textContent).join('|'));
+ok('第二个分区带间隔样式', sections[1] && sections[1].classList.contains('nav-section-gap'));
+ok('标签带有所属分区标记', tabs().every(t => t.dataset.section === SECTION_OF.get(t.dataset.id)),
+   tabs().map(t => `${t.dataset.id}:${t.dataset.section}`).join(' '));
+
 ok('默认工具已挂载', mounted.includes('a'), 'mounted=' + JSON.stringify(mounted));
 ok('首个标签 aria-selected=true', tabs()[0].getAttribute('aria-selected') === 'true');
 ok('其余标签 aria-selected=false', tabs().slice(1).every(t => t.getAttribute('aria-selected') === 'false'));

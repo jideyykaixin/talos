@@ -75,7 +75,7 @@ for (const id of ids) {
     name: /name:\s*'[^']+'/.test(src),
     icon: /icon:\s*'[^']+'/.test(src),
     desc: /desc:\s*'[^']+'/.test(src),
-    mount: /mount\(root\)\s*\{/.test(src),
+    mount: /\bmount\s*\(/.test(src),
     defaultExport: /export default\s*\{/.test(src),
   };
   const missing = Object.entries(fields).filter(([, v]) => !v).map(([k]) => k);
@@ -83,17 +83,20 @@ for (const id of ids) {
   else ok(`工具 ${id} 契约完整`);
 }
 
-/* 7. 除 Tailwind CDN 外不得有网络依赖（SVG/XML 命名空间不算请求） */
+/* 7. 除 Tailwind CDN 外不得有网络依赖（SVG/XML 命名空间不算请求）
+ *    config.js 里的快捷链接是用户主动点击才跳转的 href，不是运行时请求，豁免。 */
 const NAMESPACE_OK = /^https?:\/\/www\.w3\.org\//;
+const LINK_DATA_OK = /[\\/]dashboard[\\/]config\.js$/;
 const allSrc = [...mods].map(f => [f, readFileSync(f, 'utf8')]);
 for (const [f, src] of allSrc) {
+  if (LINK_DATA_OK.test(f)) continue;
   const m = src.match(/https?:\/\/[^\s'"]+/g);
   if (m) {
     const real = m.filter(u => !NAMESPACE_OK.test(u));
     if (real.length) bad(`${f.split(/[\\/]/).pop()} 含外部 URL: ${real[0]}`);
   }
 }
-ok('模块内无网络依赖（仅 SVG 命名空间）');
+ok('模块内无网络依赖（仅 SVG 命名空间与快捷链接配置）');
 
 /* 8. 文件体积报告 */
 console.log('\n--- 体积 ---');

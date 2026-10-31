@@ -2,6 +2,8 @@
 // 验证 —— 不抛异常、关键节点被创建、事件能被触发、返回值是函数或 undefined。
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 let fail = 0;
 const ok = (n, c, e = '') => { if (!c) fail++; console.log(`${c ? 'OK  ' : 'FAIL'} ${n}${e ? '  ' + e : ''}`); };
@@ -59,6 +61,10 @@ class Node {
   }
   focus() {}
   select() {}
+  remove() {
+    const p = this.parentNode;
+    if (p) { p.children = p.children.filter(c => c !== this); this.parentNode = null; }
+  }
   click() { this.dispatch('click'); }
   scrollIntoView() {}
   getContext() { return { fillRect() {}, fillStyle: '' }; }
@@ -73,12 +79,16 @@ class Text extends Node {
 }
 
 function makeDocument() {
-  const brand = new Node('span'); brand.id = 'brand';
   const html = new Node('html');
   const body = new Node('body');
   const doc = {
     html, body,
     documentElement: html,
+    visibilityState: 'visible',
+    listeners: {},
+    addEventListener(t, fn) { (this.listeners[t] ||= []).push(fn); },
+    removeEventListener(t, fn) { this.listeners[t] = (this.listeners[t] || []).filter(f => f !== fn); },
+    dispatch(t, ev = {}) { for (const fn of this.listeners[t] || []) fn({ target: this, preventDefault() {}, ...ev }); },
     _byId: {},
     createElement: (t) => { const n = new Node(t); n.ownerDocument = doc; return n; },
     createTextNode: (t) => new Text(t),
@@ -96,11 +106,67 @@ function makeDocument() {
 /* ---------------- 加载工具模块 ---------------- */
 const toolPath = process.argv[2] || new URL('../assets/js/tools/timestamp.js', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
 const src = readFileSync(toolPath, 'utf8');
-const code = src
-  .replace(/^\s*import\s+\{[^}]*\}\s+from\s+['"][^'"]+['"];?\s*$/gm, '')
-  .replace(/^\s*import\s+[\w$]+\s+from\s+['"][^'"]+['"];?\s*$/gm, '')
-  .replace(/^\s*export\s+default\s+/gm, 'const __default = ')
-  .replace(/^\s*export\s+(?=(const|let|var|function|class|async|function\*))/gm, '');
+
+/** 收集一个模块顶层的具名导出（const/let/var/function/class） */
+function namesOf(src) {
+  const out = new Set();
+  for (const m of src.matchAll(/^(?:const|let|var|function|class)\s+([A-Za-z_$][\w$]*)/gm)) out.add(m[1]);
+  out.delete('__default');
+  return [...out];
+}
+
+/** 递归把 import 的模块源码拼进来，这样 dashboard.js 里的
+ *  `import * as clock from '../dashboard/clock.js'` 也能跑。
+ *  只支持本站用到的写法：`export default`、`export const/function`、`import * as ns`、具名 import。 */
+function bundle(file, depth = 0) {
+  if (depth > 4) throw new Error('import 嵌套过深');
+
+  const strip = (s) => s
+    // import * as ns from './x.js' → 占位符，后面按命名空间收集
+    .replace(/^\s*import\s+\*\s+as\s+([\w$]+)\s+from\s+['"]([^'"]+)['"];?\s*$/gm,
+      (_, ns, spec) => `/*NS:${ns}=${spec}*/`)
+    // import { a, b } from './x.js'
+    .replace(/^\s*import\s+\{[^}]*\}\s+from\s+['"][^'"]+['"];?\s*$/gm, '')
+    // import name from './x.js'
+    .replace(/^\s*import\s+[\w$]+\s+from\s+['"][^'"]+['"];?\s*$/gm, '')
+    // export default { ... } → const __default = { ... }
+    .replace(/^\s*export\s+default\s+/gm, 'const __default = ')
+    // export const / export function → 去掉 export
+    .replace(/^\s*export\s+(?=(const|let|var|function|class|async|function\*))/gm, '');
+
+  let text = strip(readFileSync(file, 'utf8'));
+
+  const specs = [...text.matchAll(/\/\*NS:([\w$]+)=([^*]+)\*\//g)];
+  const loaded = [];
+  for (const [, ns, spec] of specs) {
+    let inner;
+    if (spec.includes('core/dom.js')) {
+      // dom.js 由下面的 domShim 提供，直接引用它的函数
+      inner = `const ${ns} = { el, $, $$, debounce, copyText, toast };`;
+    } else if (spec.includes('core/storage.js')) {
+      inner = `const ${ns} = { load, save, remove, clearAll };`;
+    } else {
+      const sub = bundle(resolve(dirname(file), spec.trim()), depth + 1);
+      if (/^const __default = /m.test(sub)) {
+        inner = `const ${ns} = (function(){\n${sub}\nreturn __default; })();`;
+      } else {
+        // 只有具名导出的模块（如 clock.js 导出 greeting/create），返回命名空间对象
+        inner = `const ${ns} = (function(){\n${sub}\nreturn { ${namesOf(sub).join(', ')} }; })();`;
+      }
+    }
+    loaded.push(inner);
+    text = text.replace(`/*NS:${ns}=${spec}*/`, '');
+  }
+  return loaded.join('\n') + '\n' + text;
+}
+
+let code;
+try {
+  code = bundle(toolPath);
+} catch (e) {
+  console.log('FAIL 模块打包失败: ' + e.message);
+  process.exit(1);
+}
 
 // 提供 dom.js 的等价实现
 const domShim = `
@@ -129,9 +195,16 @@ const $$ = (sel, root = document) => root.querySelectorAll(sel);
 const debounce = (fn, ms = 200) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
 const copyText = async () => true;
 const toast = (msg) => { globalThis.__lastToast = msg; };
+// storage.js 的等价实现：用内存 Map 模拟 localStorage，便于验证持久化行为
+const __store = new Map();
+const load = (key, fallback = null) => __store.has(key) ? JSON.parse(__store.get(key)) : fallback;
+const save = (key, value) => { try { __store.set(key, JSON.stringify(value)); return true; } catch { return false; } };
+const remove = (key) => { __store.delete(key); };
+const clearAll = () => { __store.clear(); };
 `;
 
 const document = makeDocument();
+const winListeners = {};
 const sandbox = {
   document,
   TextEncoder, TextDecoder,
@@ -145,7 +218,10 @@ const sandbox = {
   location: { hash: '', href: '' },
   history: { replaceState() {} },
   localStorage: { getItem: () => null, setItem() {}, removeItem() {} },
-  setTimeout, clearTimeout, console,
+  setTimeout, clearTimeout, setInterval, clearInterval, console,
+  // window 由 sandbox 自身充当（script 里访问的 window.* 都落到这里）
+  addEventListener: (t, fn) => { (winListeners[t] ||= []).push(fn); },
+  removeEventListener: (t, fn) => { winListeners[t] = (winListeners[t] || []).filter(f => f !== fn); },
   window: {},
   globalThis: null,
 };
@@ -185,7 +261,9 @@ try {
   threw = e;
 }
 ok('mount() 不抛异常', !threw, threw ? threw.message : '');
-ok('mount() 返回值合法', ret === undefined || typeof ret === 'function', typeof ret);
+const retOk = ret === undefined || typeof ret === 'function'
+  || (ret && typeof ret === 'object' && typeof ret.destroy === 'function');
+ok('mount() 返回值合法', retOk, ret === undefined ? 'undefined' : typeof ret === 'object' ? '{destroy}' : typeof ret);
 ok('mount() 产出了 DOM 节点', rootNode.children.length > 0, `${rootNode.children.length} 个顶层节点`);
 
 /* 对照数量 */
@@ -234,6 +312,8 @@ ok('select change 无异常', !se, se ? se.message : '');
 /* cleanup 可调用 */
 if (typeof ret === 'function') {
   try { ret(); ok('cleanup() 可调用', true); } catch (e) { ok('cleanup() 可调用', false, e.message); }
+} else if (ret && typeof ret === 'object' && typeof ret.destroy === 'function') {
+  try { ret.destroy(); ok('destroy() 可调用', true); } catch (e) { ok('destroy() 可调用', false, e.message); }
 }
 
 console.log(fail ? `\n✗ ${fail} 处失败` : `\n✓ ${tool.id} 冒烟测试通过`);

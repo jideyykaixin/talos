@@ -54,7 +54,11 @@ for (const id of imports) {
   try {
     const size = statSync(p).size;
     const src = readFileSync(p, 'utf8');
-    const ok = /export default\s*\{/.test(src) && /id:\s*'/.test(src) && /mount\(root\)/.test(src);
+    // 契约：默认导出对象里要有 id / name / mount
+    const ok = /export default\s*\{/.test(src)
+      && /id:\s*'/.test(src)
+      && /name:\s*'/.test(src)
+      && /\bmount\s*\(/.test(src);
     console.log(`TOOL ${id.padEnd(10)} ${String(size).padStart(6)} bytes  contract:${ok ? 'ok' : 'MISSING'}`);
     if (!ok) fail++;
   } catch {
