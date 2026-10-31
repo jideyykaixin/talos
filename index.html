@@ -1,95 +1,116 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" class="dark">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>本站 · 游戏工具与沙盘记录</title>
-<meta name="description" content="纯前端的游戏小工具集合：沙盘记录、决策建议、规则速查。无需登录，数据全在本地。">
-<meta name="color-scheme" content="light dark">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🗝️</text></svg>">
-<link rel="stylesheet" href="assets/css/base.css">
-</head>
-<body>
-<a class="skip" href="#main">跳到主要内容</a>
-
-<header class="site-header">
-  <a class="brand" href="./index.html">
-    <svg class="logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-9h6v9"/></svg>
-    本站
-  </a>
-  <nav aria-label="站内导航">
-    <a href="./index.html" aria-current="page">工具</a>
-    <a href="tools/talos.html">沙盘指挥台</a>
-    <a href="#about">关于</a>
-  </nav>
-  <button class="btn-icon" id="btn-theme" type="button" title="切换主题">◐<span class="sr-only">切换主题</span></button>
-</header>
-
-<main id="main" class="wrap">
-
-  <section style="padding:2rem 0 1rem" class="prose">
-    <h1>游戏小工具</h1>
-    <p class="muted">纯前端、无登录、数据只存你自己的浏览器。开箱即用，加载快，离线也能开。</p>
-  </section>
-
-  <ul class="tool-grid">
-    <li>
-      <a class="tool-card" href="tools/talos.html">
-        <span class="ico" aria-hidden="true">🗝️</span>
-        <h3>沙盘同步指挥台 · 塔罗斯监狱</h3>
-        <p>录入 16 间牢房的囚犯与候选房，按「同阶 + 克制」与刑具破例给出下一步动作：吃 / 换 / 开房 / 去审讯室。</p>
-        <span class="tags">
-          <span class="badge">沙盘记录</span>
-          <span class="badge">决策建议</span>
-          <span class="badge">可导出</span>
-        </span>
-      </a>
-    </li>
-    <li>
-      <span class="tool-card is-soon" aria-disabled="true">
-        <span class="ico" aria-hidden="true">📋</span>
-        <h3>规则速查表</h3>
-        <p>把阶位、食物链、刑具破例、事件收益做成可筛选的一页表。（规划中）</p>
-        <span class="tags"><span class="badge">规划中</span></span>
-      </span>
-    </li>
-    <li>
-      <span class="tool-card is-soon" aria-disabled="true">
-        <span class="ico" aria-hidden="true">🎲</span>
-        <h3>开吃日计算器</h3>
-        <p>只选你手上的刑具，直接算这一局该第几天开始吃。（规划中）</p>
-        <span class="tags"><span class="badge">规划中</span></span>
-      </span>
-    </li>
-  </ul>
-
-  <section id="about" class="prose" style="margin-top:3rem">
-    <h2>关于本站</h2>
-    <p>这是一个由玩家自建的非官方工具站。所有工具都在浏览器本地运算，不会上传你的数据，也不需要注册。</p>
-    <p>数值与规则参考官方前瞻信息与玩家实测整理，可能随游戏版本变化，请以游戏内实际为准。本站不提供任何虚拟物品交易、代练或第三方修改服务。</p>
-
-    <h2 id="privacy">隐私</h2>
-    <p>我们不收集、不上传任何个人数据。工具的进度保存在你浏览器的 <code>localStorage</code> 里，清空浏览器数据即会丢失；你可以随时用工具页的「导出 JSON」备份。</p>
-    <p>本站不含第三方统计与广告脚本。</p>
-  </section>
-</main>
-
-<footer class="site-footer">
-  <div class="wrap">
-    <p class="disclaimer">非官方玩家自建站点。数值以游戏内实际为准。</p>
-    <nav aria-label="页脚导航">
-      <a href="./index.html">首页</a>
-      <a href="tools/talos.html">沙盘指挥台</a>
-      <a href="#about">关于</a>
-      <a href="#privacy">隐私</a>
-    </nav>
-  </div>
-</footer>
-
-<script type="module">
-  import * as store from "./assets/js/store.js?v=1";
-  store.applyTheme(store.currentTheme());
-  document.getElementById("btn-theme").addEventListener("click", () => store.cycleTheme());
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DEVKIT · 个人工具箱</title>
+<meta name="description" content="纯前端开发者工具箱：时间戳转换、Base64、JSON 格式化、二维码生成、密码生成。数据不出浏览器。">
+<meta name="color-scheme" content="dark light">
+<script>
+/* 首屏前定主题，避免闪烁 */
+(function () {
+  try {
+    var s = localStorage.getItem('devkit.theme');
+    var d = s ? s === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.classList.toggle('dark', d);
+  } catch (e) {}
+})();
 </script>
+
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Noto Sans SC', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'Liberation Mono', 'monospace'],
+      },
+      colors: {
+        ink:  { 50:'#f6f6f7', 100:'#e8e8ec', 200:'#d5d5db', 300:'#b4b4bd', 400:'#8b8b96',
+                500:'#62626c', 600:'#47474f', 700:'#33333a', 800:'#1e1e23', 850:'#16161a',
+                900:'#0e0e11', 950:'#0a0a0b' },
+        brand: { DEFAULT:'#e05f00', dark:'#ff7a18', soft:'rgba(224,95,0,.10)' },
+      },
+    },
+  },
+};
+</script>
+<link rel="stylesheet" href="./assets/css/app.css">
+</head>
+
+<body class="min-h-screen bg-ink-100 text-ink-900 antialiased dark:bg-ink-950 dark:text-ink-100">
+
+<a href="#main"
+   class="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-brand focus:px-3 focus:py-2 focus:text-white">
+  跳到主内容
+</a>
+
+<div class="flex min-h-screen flex-col md:flex-row">
+
+  <!-- ============ 侧边栏 / 移动端顶部标签 ============ -->
+  <aside id="sidebar"
+         class="sticky top-0 z-30 shrink-0 border-b border-ink-200 bg-ink-100/95 backdrop-blur
+                dark:border-ink-800 dark:bg-ink-950/95
+                md:h-screen md:w-[232px] md:border-b-0 md:border-r">
+
+    <!-- 品牌行 -->
+    <div class="flex items-center justify-between gap-3 px-4 pb-2 pt-3 md:px-5 md:pb-4 md:pt-5">
+      <a href="#/" class="group flex items-baseline gap-2 no-underline">
+        <span class="grid h-6 w-6 place-items-center rounded-[3px] bg-ink-900 font-mono text-[12px] font-bold text-ink-50
+                     dark:bg-ink-100 dark:text-ink-950">D</span>
+        <span class="font-mono text-[13px] font-semibold tracking-[.22em] text-ink-900 dark:text-ink-100">DEVKIT</span>
+        <span class="rounded-sm border border-ink-300 px-1 font-mono text-[9px] leading-4 tracking-wider text-ink-500
+                     dark:border-ink-700 dark:text-ink-400">v2</span>
+      </a>
+
+      <button id="theme-toggle" type="button" title="切换深浅主题" aria-label="切换深浅主题"
+              class="grid h-8 w-8 place-items-center rounded border border-ink-300 text-[13px] text-ink-600
+                     transition-colors hover:border-brand hover:text-brand
+                     dark:border-ink-700 dark:text-ink-300">
+        <span class="theme-i-light" aria-hidden="true">☀</span>
+        <span class="theme-i-dark" aria-hidden="true">☾</span>
+      </button>
+    </div>
+
+    <!-- 导航 -->
+    <nav aria-label="工具导航" class="px-2 pb-2 md:px-3 md:pb-4">
+      <div id="nav-list" role="tablist" aria-orientation="vertical"
+           class="hide-scroll -mx-1 flex snap-x gap-1 overflow-x-auto px-1 pb-1
+                  md:mx-0 md:flex-col md:overflow-visible md:px-0 md:pb-0"></div>
+    </nav>
+
+    <div class="hidden px-5 pb-5 font-mono text-[10px] leading-relaxed tracking-wide text-ink-400 md:block
+                dark:text-ink-500">
+      纯前端 · 数据不出浏览器
+    </div>
+  </aside>
+
+  <!-- ============ 内容区 ============ -->
+  <main id="main" class="min-w-0 flex-1">
+    <div class="mx-auto w-full max-w-[880px] px-4 pb-16 pt-6 md:px-8 md:pt-10">
+
+      <header class="mb-6 border-b border-ink-200 pb-4 dark:border-ink-800">
+        <h1 id="page-title"
+            class="font-mono text-[19px] font-semibold tracking-tight text-ink-900 dark:text-ink-50"></h1>
+        <p id="page-desc" class="mt-1.5 text-[13px] leading-relaxed text-ink-500 dark:text-ink-400"></p>
+      </header>
+
+      <div id="view" role="tabpanel" tabindex="-1" aria-live="polite"></div>
+
+      <footer class="mt-16 border-t border-ink-200 pt-4 font-mono text-[10.5px] tracking-wide text-ink-400 dark:border-ink-800 dark:text-ink-500">
+        DEVKIT · 全部计算在本地完成，不上传任何数据
+      </footer>
+    </div>
+  </main>
+</div>
+
+<div id="toast" aria-live="assertive"
+     class="pointer-events-none fixed bottom-5 left-1/2 z-50 -translate-x-1/2 translate-y-3 rounded
+            bg-ink-900 px-3.5 py-2 font-mono text-[12px] text-ink-50 opacity-0 transition-all duration-200
+            dark:bg-ink-100 dark:text-ink-950"></div>
+
+<script type="module" src="./assets/js/app.js"></script>
 </body>
 </html>

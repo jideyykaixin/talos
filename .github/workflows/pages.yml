@@ -2,8 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -17,47 +16,36 @@ concurrency:
 
 jobs:
   test:
-    name: 测试与自检
     runs-on: ubuntu-latest
     steps:
-      - name: 检出代码
-        uses: actions/checkout@v4
-
-      - name: 安装 Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: "20"
-
-      - name: 显示环境
-        run: |
-          node --version
-          npm --version
-
-      - name: 引擎单测
-        run: node test/engine.test.mjs
-
-      - name: 静态资源自检（无 CDN、相对路径）
+          node-version: 20
+      - name: 环境信息
+        run: node --version && npm --version
+      - name: 语法与模块自检
         run: node tools/check.mjs
+      - name: 页面与资源自检
+        run: node tools/site-check.mjs
+      - name: 工具逻辑验证
+        run: node tools/logic-verify.mjs
+      - name: 路由联动测试
+        run: node tools/router-test.mjs assets/js/core/router.js
+      - name: 二维码编解码验证
+        run: node tools/qr-verify.mjs && node tools/qr-rs-check.mjs && node tools/qr-robust.mjs
 
   deploy:
-    name: 发布到 Pages
     needs: test
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: 检出代码
-        uses: actions/checkout@v4
-
-      - name: 配置 Pages
-        uses: actions/configure-pages@v5
-
-      - name: 上传产物
-        uses: actions/upload-pages-artifact@v3
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
         with:
-          path: "."
-
-      - name: 部署
-        id: deployment
+          path: .
+      - id: deployment
         uses: actions/deploy-pages@v4

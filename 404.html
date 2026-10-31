@@ -1,21 +1,44 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
+<!doctype html>
+<html lang="zh-CN" class="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>页面不存在 · 本站</title>
+<title>页面不存在 · DEVKIT</title>
 <meta name="robots" content="noindex">
-<link rel="stylesheet" href="assets/css/base.css">
+<script>
+  (function () {
+    try {
+      var s = localStorage.getItem('devkit.theme');
+      var d = s ? s === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.classList.toggle('dark', d);
+    } catch (e) {}
+  })();
+</script>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        fontFamily: { sans: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'], mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'] },
+        colors: {
+          ink: { 50: '#f4f4f5', 100: '#e4e4e7', 300: '#a1a1aa', 400: '#8b8b94', 500: '#6b6b73', 700: '#2f2f35', 800: '#1f1f24', 850: '#16161a', 900: '#101012', 950: '#0a0a0b' },
+          brand: { DEFAULT: '#e05f00', dark: '#ff7a18', soft: 'rgba(224,95,0,.10)' },
+        },
+      },
+    },
+  };
+</script>
+<link rel="stylesheet" href="./assets/css/app.css">
 </head>
 <body>
-<main class="wrap prose" style="padding-top:4rem">
-  <p class="badge">404</p>
-  <h1>这间牢房是空的</h1>
-  <p class="muted">你要找的页面不存在，或者链接里的路径拼错了。</p>
-  <p>
-    <a class="btn btn-primary" href="./index.html">回到首页</a>
-    <a class="btn" href="./tools/talos.html">沙盘指挥台</a>
-  </p>
-</main>
+  <main class="mx-auto flex min-h-screen max-w-[640px] flex-col items-start justify-center px-6">
+    <p class="mono text-sm tracking-widest text-brand dark:text-brand-dark">ERROR 404</p>
+    <h1 class="mt-3 text-3xl font-semibold tracking-tight">这里的页面不存在</h1>
+    <p class="mt-3 text-[15px] leading-relaxed text-ink-500 dark:text-ink-400">
+      地址可能拼写有误，或该工具还没做出来。回首页挑一个工具继续吧。
+    </p>
+    <a href="./index.html" class="btn btn-primary mt-7">← 返回工具箱</a>
+  </main>
 </body>
 </html>

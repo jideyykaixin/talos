@@ -1,16 +1,20 @@
 {
-  "name": "talos-site",
-  "version": "1.0.0",
+  "name": "devkit",
+  "version": "2.0.0",
   "private": true,
-  "description": "塔罗斯监狱·沙盘同步指挥台（非官方玩家自建工具）",
+  "description": "DEVKIT — 纯前端开发者工具箱（时间戳 / Base64 / JSON / 二维码 / 密码）",
   "type": "module",
   "engines": {
     "node": ">=20"
   },
   "scripts": {
-    "test": "node test/engine.test.mjs",
     "check": "node tools/check.mjs",
-    "ci": "node test/engine.test.mjs && node tools/check.mjs",
+    "site": "node tools/site-check.mjs",
+    "logic": "node tools/logic-verify.mjs",
+    "qr": "node tools/qr-verify.mjs && node tools/qr-rs-check.mjs && node tools/qr-robust.mjs",
+    "smoke": "node tools/ui-smoke.mjs assets/js/tools/timestamp.js && node tools/ui-smoke.mjs assets/js/tools/base64.js && node tools/ui-smoke.mjs assets/js/tools/json.js && node tools/ui-smoke.mjs assets/js/tools/qrcode.js && node tools/ui-smoke.mjs assets/js/tools/password.js",
+    "router": "node tools/router-test.mjs assets/js/core/router.js",
+    "test": "node tools/check.mjs && node tools/site-check.mjs && node tools/logic-verify.mjs && node tools/qr-verify.mjs && node tools/qr-rs-check.mjs && node tools/qr-robust.mjs && node tools/router-test.mjs assets/js/core/router.js",
     "serve": "python -m http.server 8000"
   }
 }

@@ -1,0 +1,21 @@
+# 依赖
+node_modules/
+package-lock.json
+
+# 测试产物
+qr-test-result.txt
+*.log
+
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+
+# 临时目录
+.tmp/
+dist/
