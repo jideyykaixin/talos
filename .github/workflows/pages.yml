@@ -2,7 +2,8 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -16,28 +17,47 @@ concurrency:
 
 jobs:
   test:
+    name: 测试与自检
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Node
+        uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: "20"
+
+      - name: 显示环境
+        run: |
+          node --version
+          npm --version
+
       - name: 引擎单测
-        run: node --test test/
+        run: node test/engine.test.mjs
+
       - name: 静态资源自检（无 CDN、相对路径）
         run: node tools/check.mjs
 
   deploy:
+    name: 发布到 Pages
     needs: test
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 配置 Pages
+        uses: actions/configure-pages@v5
+
+      - name: 上传产物
+        uses: actions/upload-pages-artifact@v3
         with:
-          path: .
-      - id: deployment
+          path: "."
+
+      - name: 部署
+        id: deployment
         uses: actions/deploy-pages@v4

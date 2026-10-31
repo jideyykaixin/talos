@@ -1,0 +1,16 @@
+{
+  "name": "talos-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "塔罗斯监狱·沙盘同步指挥台（非官方玩家自建工具）",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node test/engine.test.mjs",
+    "check": "node tools/check.mjs",
+    "ci": "node test/engine.test.mjs && node tools/check.mjs",
+    "serve": "python -m http.server 8000"
+  }
+}
